@@ -1,6 +1,8 @@
-FROM alpine:3.5
+FROM alpine:3.6
 
-ENV NGINX_VERSION=1.13.1
+COPY docker/ /
+
+ENV NGINX_VERSION=1.13.3
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
@@ -109,10 +111,6 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	# forward request and error logs to docker log collector
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
-
-COPY conf.d/ /etc/nginx/conf.d/
-COPY sites-enabled/ /etc/nginx/sites-enabled/
-COPY nginx.conf /etc/nginx/nginx.conf
 
 # nginx cache folder
 RUN mkdir -p /cache/nginx/proxy
