@@ -97,7 +97,11 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& mkdir /etc/nginx/owasp-modsecurity-crs \
 	&& cd /etc/nginx/owasp-modsecurity-crs \
 	&& git clone https://github.com/SpiderLabs/owasp-modsecurity-crs . \
-	&& mv /etc/nginx/crs-setup.conf . \
+  && install -m644 crs-setup.conf.example crs-setup.conf \
+  && sed -i -e 's/SecDefaultAction "phase:1,log,auditlog,pass"/#SecDefaultAction "phase:1,log,auditlog,pass"/g' crs-setup.conf \
+  && sed -i -e 's/SecDefaultAction "phase:2,log,auditlog,pass"/#SecDefaultAction "phase:1,log,auditlog,pass"/g' crs-setup.conf \
+  && sed -i -e 's/# SecDefaultAction "phase:2,log,auditlog,deny,status:403"/SecDefaultAction "phase:2,log,auditlog,deny,status:403"/g' crs-setup.conf \
+  && sed -i -e 's/# SecDefaultAction "phase:1,log,auditlog,deny,status:403"/SecDefaultAction "phase:1,log,auditlog,deny,status:403"/g' crs-setup.conf \
 	&& cd /usr/src \
 	&& git clone https://github.com/SpiderLabs/ModSecurity \
 	&& cd ModSecurity \
