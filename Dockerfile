@@ -42,6 +42,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		--with-file-aio \
 		--with-http_v2_module \
 		--with-http_v2_hpack_enc \
+		--add-module=/usr/src/ModSecurity-nginx \
 	" \
 	&& addgroup -S nginx \
 	&& adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
@@ -59,6 +60,22 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		libxslt-dev \
 		gd-dev \
 		geoip-dev \
+	&& apk add --no-cache --virtual .libmodsecurity-deps \
+		pcre-dev \
+		libxml2-dev \
+		git \
+		libtool \
+		automake \
+		autoconf \
+		g++ \
+		flex \
+		bison \
+		yajl-dev \
+	&& apk add --no-cache --virtual .libmodsecurity-rundeps \
+	  libxml2 \
+	  libxslt \
+		yajl \
+		libstdc++ \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
 	&& export GNUPGHOME="$(mktemp -d)" \
@@ -77,6 +94,44 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& rm -rf "$GNUPGHOME" nginx.tar.gz.asc \
 	&& tar -zxC /usr/src -f nginx.tar.gz \
 	&& rm nginx.tar.gz \
+	&& mkdir /etc/nginx/owasp-modsecurity-crs \
+	&& cd /etc/nginx/owasp-modsecurity-crs \
+	&& git clone https://github.com/SpiderLabs/owasp-modsecurity-crs . \
+	&& install -m644 crs-setup.conf.example crs-setup.conf \
+	&& sed -i -e 's/SecDefaultAction "phase:1,log,auditlog,pass"/#SecDefaultAction "phase:1,log,auditlog,pass"/g' crs-setup.conf \
+	&& sed -i -e 's/SecDefaultAction "phase:2,log,auditlog,pass"/#SecDefaultAction "phase:1,log,auditlog,pass"/g' crs-setup.conf \
+	&& sed -i -e 's/# SecDefaultAction "phase:2,log,auditlog,deny,status:403"/SecDefaultAction "phase:2,log,auditlog,deny,status:403"/g' crs-setup.conf \
+	&& sed -i -e 's/# SecDefaultAction "phase:1,log,auditlog,deny,status:403"/SecDefaultAction "phase:1,log,auditlog,deny,status:403"/g' crs-setup.conf \
+	&& cd /usr/src \
+	&& git clone https://github.com/SpiderLabs/ModSecurity \
+	&& cd ModSecurity \
+	&& git checkout v3/master \
+	&& git submodule init \
+	&& git submodule update \
+	&& sed -i -e 's/u_int64_t/uint64_t/g' \
+		./src/actions/transformations/html_entity_decode.cc \
+		./src/actions/transformations/html_entity_decode.h \
+		./src/actions/transformations/js_decode.cc \
+		./src/actions/transformations/js_decode.h \
+		./src/actions/transformations/parity_even_7bit.cc \
+		./src/actions/transformations/parity_even_7bit.h \
+		./src/actions/transformations/parity_odd_7bit.cc \
+		./src/actions/transformations/parity_odd_7bit.h \
+		./src/actions/transformations/parity_zero_7bit.cc \
+		./src/actions/transformations/parity_zero_7bit.h \
+		./src/actions/transformations/remove_comments.cc \
+		./src/actions/transformations/url_decode_uni.cc \
+		./src/actions/transformations/url_decode_uni.h \
+	&& sh build.sh \
+	&& ./configure \
+	&& make \
+	&& make install \
+	&& install -m644 modsecurity.conf-recommended /etc/nginx/owasp-modsecurity-crs/modsecurity.conf \
+	&& sed -i -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g' /etc/nginx/owasp-modsecurity-crs/modsecurity.conf \
+	&& sed -i -e 's/SecRequestBodyLimit 13107200/SecRequestBodyLimit 50107200/g' /etc/nginx/owasp-modsecurity-crs/modsecurity.conf \
+	&& sed -i -e 's/SecStatusEngine On/SecStatusEngine Off/g' /etc/nginx/owasp-modsecurity-crs/modsecurity.conf \
+	&& cd /usr/src \
+	&& git clone https://github.com/SpiderLabs/ModSecurity-nginx \
 	&& cd /usr/src/nginx-$NGINX_VERSION \
 	&& patch -p 1 -u < ../patches/nginx_http2_hpack.patch \
 	&& ./configure $CONFIG \
@@ -107,8 +162,10 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	)" \
 	&& apk add --no-cache --virtual .nginx-rundeps $runDeps \
 	&& apk del .build-deps \
+	&& apk del .libmodsecurity-deps \
 	&& apk del .gettext \
 	&& mv /tmp/envsubst /usr/local/bin/ \
+	&& rm -rf /usr/src/ModSecurity /usr/src/ModSecurity-nginx \
 	\
 	# forward request and error logs to docker log collector
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
