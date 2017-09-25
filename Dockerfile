@@ -94,7 +94,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& rm -rf "$GNUPGHOME" nginx.tar.gz.asc \
 	&& tar -zxC /usr/src -f nginx.tar.gz \
 	&& rm nginx.tar.gz \
-	&& mkdir -p /var/log/modsec
+	&& mkdir -p /var/log/modsec \
 	&& mkdir /etc/nginx/owasp-modsecurity-crs \
 	&& cd /etc/nginx/owasp-modsecurity-crs \
 	&& git clone https://github.com/SpiderLabs/owasp-modsecurity-crs . \
