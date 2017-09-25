@@ -94,6 +94,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& rm -rf "$GNUPGHOME" nginx.tar.gz.asc \
 	&& tar -zxC /usr/src -f nginx.tar.gz \
 	&& rm nginx.tar.gz \
+	&& mkdir -p /var/log/modsec
 	&& mkdir /etc/nginx/owasp-modsecurity-crs \
 	&& cd /etc/nginx/owasp-modsecurity-crs \
 	&& git clone https://github.com/SpiderLabs/owasp-modsecurity-crs . \
@@ -127,6 +128,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& make \
 	&& make install \
 	&& install -m644 modsecurity.conf-recommended /etc/nginx/owasp-modsecurity-crs/modsecurity.conf \
+	&& sed -i -e 's/\/var\/log\/modsec_audit.log/\/var\/log\/modsec\/audit.log/g' /etc/nginx/owasp-modsecurity-crs/modsecurity.conf \
 	&& sed -i -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g' /etc/nginx/owasp-modsecurity-crs/modsecurity.conf \
 	&& sed -i -e 's/SecRequestBodyLimit 13107200/SecRequestBodyLimit 50107200/g' /etc/nginx/owasp-modsecurity-crs/modsecurity.conf \
 	&& sed -i -e 's/SecStatusEngine On/SecStatusEngine Off/g' /etc/nginx/owasp-modsecurity-crs/modsecurity.conf \
@@ -169,7 +171,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	\
 	# forward request and error logs to docker log collector
 	&& ln -sf /dev/stdout /var/log/nginx/access.log \
-	&& ln -sf /dev/stderr /var/log/nginx/error.log
+	&& ln -sf /dev/stderr /var/log/nginx/error.log \
+	&& ln -sf /dev/stderr /var/log/modsec/audit.log
 
 # nginx cache folder
 RUN mkdir -p /cache/nginx/proxy
