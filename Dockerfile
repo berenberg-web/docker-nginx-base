@@ -2,7 +2,7 @@ FROM alpine:3.6
 
 COPY docker/ /
 
-ENV NGINX_VERSION=1.13.5
+ENV NGINX_VERSION=1.13.6
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && CONFIG="\
@@ -41,9 +41,11 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
       --with-compat \
       --with-file-aio \
       --with-http_v2_module \
-      --with-http_v2_hpack_enc \
       --add-module=/usr/src/ModSecurity-nginx \
     " \
+ \
+ # https://github.com/cloudflare/sslconfig/issues/83
+ # --with-http_v2_hpack_enc \
  && addgroup -S nginx \
  && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
  && apk add --no-cache --virtual .build-deps \
@@ -137,7 +139,9 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && cd /usr/src \
  && git clone https://github.com/SpiderLabs/ModSecurity-nginx \
  && cd /usr/src/nginx-$NGINX_VERSION \
- && patch -p 1 -u < ../patches/nginx_http2_hpack.patch \
+  \
+ # https://github.com/cloudflare/sslconfig/issues/83
+ #&& patch -p 1 -u < ../patches/nginx_http2_hpack.patch \
  && ./configure $CONFIG \
  && make -j$(getconf _NPROCESSORS_ONLN) \
  && make install \
