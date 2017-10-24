@@ -110,7 +110,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && cd /usr/src \
  && git clone https://github.com/SpiderLabs/ModSecurity \
  && cd ModSecurity \
- && git checkout v3/master \
+ #&& git checkout v3/master \
+ && git checkout 1518c43 \
  && git submodule init \
  && git submodule update \
  && sed -i -e 's/u_int64_t/uint64_t/g' \
@@ -139,7 +140,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && cd /usr/src \
  && git clone https://github.com/SpiderLabs/ModSecurity-nginx \
  && cd /usr/src/nginx-$NGINX_VERSION \
-  \
+ \
  # https://github.com/cloudflare/sslconfig/issues/83
  #&& patch -p 1 -u < ../patches/nginx_http2_hpack.patch \
  && ./configure $CONFIG \
