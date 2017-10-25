@@ -111,7 +111,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && git clone https://github.com/SpiderLabs/ModSecurity \
  && cd ModSecurity \
  #&& git checkout v3/master \
- && git checkout 1518c43 \
+ && git checkout a2427df \
  && git submodule init \
  && git submodule update \
  && sed -i -e 's/u_int64_t/uint64_t/g' \
