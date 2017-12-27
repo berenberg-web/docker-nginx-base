@@ -2,7 +2,7 @@ FROM alpine:3.7
 
 COPY docker/ /
 
-ENV NGINX_VERSION=1.13.7
+ENV NGINX_VERSION=1.13.8
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && CONFIG="\
@@ -154,6 +154,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && strip /usr/sbin/nginx* \
  && strip /usr/lib/nginx/modules/*.so \
  && rm -rf /usr/src/nginx-$NGINX_VERSION \
+ && rm -rf /usr/src/ModSecurity /usr/src/ModSecurity-nginx \
  \
  # Bring in gettext so we can get `envsubst`, then throw
  # the rest away. To do this, we need to install `gettext`
@@ -173,7 +174,6 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && apk del .libmodsecurity-deps \
  && apk del .gettext \
  && mv /tmp/envsubst /usr/local/bin/ \
- && rm -rf /usr/src/ModSecurity /usr/src/ModSecurity-nginx \
  \
  # forward request and error logs to docker log collector
  && ln -sf /dev/stdout /var/log/nginx/access.log \
