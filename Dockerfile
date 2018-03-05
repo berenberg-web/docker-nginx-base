@@ -2,7 +2,7 @@ FROM alpine:3.7
 
 COPY docker/ /
 
-ENV NGINX_VERSION=1.13.8
+ENV NGINX_VERSION=1.13.9
 
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
  && CONFIG="\
@@ -78,8 +78,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     libxslt \
     yajl \
     libstdc++ \
- && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
- && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
+ && curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
+ && curl -fSL https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
  && export GNUPGHOME="$(mktemp -d)" \
  && found=''; \
     for server in \
@@ -187,6 +187,8 @@ EXPOSE 80 443
 
 STOPSIGNAL SIGTERM
 
-HEALTHCHECK --interval=1m --timeout=3s --retries=2 CMD wget -q -O - localhost/health-check || exit 1
+HEALTHCHECK --interval=5s --timeout=3s --retries=2 \
+    CMD \
+    wget -q -O - localhost/health-check || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
